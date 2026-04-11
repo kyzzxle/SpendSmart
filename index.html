@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Expense Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+  <!-- ===== LOGIN / REGISTER SCREEN ===== -->
+  <div id="loginScreen" class="screen active">
+    <div class="login-card">
+      <div class="login-logo">💰</div>
+      <h1 class="login-title">SpendSmart</h1>
+      <p class="login-sub">Student Expense Tracker</p>
+
+      <!-- Tab switcher -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLoginBtn" onclick="switchAuthTab('login')">Log In</button>
+        <button class="auth-tab" id="tabRegisterBtn" onclick="switchAuthTab('register')">Register</button>
+      </div>
+
+      <!-- ── LOGIN FORM ── -->
+      <div id="loginForm">
+        <div class="form-group">
+          <label for="loginUsername">Username</label>
+          <input type="text" id="loginUsername" placeholder="Enter your username" />
+          <span class="error-msg" id="errUsername"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" placeholder="Enter your password" />
+          <span class="error-msg" id="errPassword"></span>
+        </div>
+
+        <button class="btn-primary" style="width:100%" onclick="handleLogin()">Log In</button>
+        <p class="login-hint">Don't have an account? <a onclick="switchAuthTab('register')" style="color:var(--primary);cursor:pointer;font-weight:600">Register here</a></p>
+      </div>
+
+      <!-- ── REGISTER FORM ── -->
+      <div id="registerForm" style="display:none">
+        <div class="form-group">
+          <label for="regUsername">Username <span class="required">*</span></label>
+          <input type="text" id="regUsername" placeholder="Choose a username" maxlength="30"/>
+          <span class="error-msg" id="errRegUsername"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="regEmail">Gmail Address <span class="required">*</span></label>
+          <input type="email" id="regEmail" placeholder="yourname@gmail.com" />
+          <span class="error-msg" id="errRegEmail"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="regPassword">Password <span class="required">*</span></label>
+          <input type="password" id="regPassword" placeholder="At least 6 characters" />
+          <span class="error-msg" id="errRegPassword"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="regConfirm">Confirm Password <span class="required">*</span></label>
+          <input type="password" id="regConfirm" placeholder="Re-enter your password" />
+          <span class="error-msg" id="errRegConfirm"></span>
+        </div>
+
+        <button class="btn-primary" style="width:100%" onclick="handleRegister()">Create Account</button>
+        <div id="regSuccessMsg" class="success-msg hidden">✅ Account created! You can now log in.</div>
+        <p class="login-hint">Already have an account? <a onclick="switchAuthTab('login')" style="color:var(--primary);cursor:pointer;font-weight:600">Log in here</a></p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== MAIN DASHBOARD ===== -->
+  <div id="dashboardScreen" class="screen">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">💰 SpendSmart</div>
+      <nav class="sidebar-nav">
+        <a class="nav-item active" onclick="showTab('dashboard')">📊 Dashboard</a>
+        <a class="nav-item" onclick="showTab('add')">➕ Add Expense</a>
+        <a class="nav-item" onclick="showTab('history')">📋 History</a>
+        <a class="nav-item" onclick="showTab('budget')">🎯 Budget</a>
+      </nav>
+      <button class="btn-logout" onclick="handleLogout()">🚪 Logout</button>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+      <!-- Top Bar -->
+      <div class="topbar">
+        <h2 id="tabTitle">Dashboard</h2>
+        <div class="topbar-right">
+          <input type="text" id="searchBar" placeholder="🔍 Search expenses..." oninput="filterExpenses()" />
+          <span class="user-badge">👤 <span id="loggedUser"></span></span>
+        </div>
+      </div>
+
+      <!-- ── TAB: DASHBOARD ── -->
+      <section id="tab-dashboard" class="tab-content active">
+        <div class="summary-cards">
+          <div class="card card-blue">
+            <div class="card-label">Total Expenses</div>
+            <div class="card-value" id="totalExpenses">₱0.00</div>
+          </div>
+          <div class="card card-green">
+            <div class="card-label">Budget Remaining</div>
+            <div class="card-value" id="budgetRemaining">₱0.00</div>
+          </div>
+          <div class="card card-yellow">
+            <div class="card-label">No. of Entries</div>
+            <div class="card-value" id="entryCount">0</div>
+          </div>
+          <div class="card card-red">
+            <div class="card-label">Highest Expense</div>
+            <div class="card-value" id="highestExpense">₱0.00</div>
+          </div>
+        </div>
+
+        <!-- Category Summary -->
+        <div class="section-box">
+          <h3 class="section-title">Spending by Category</h3>
+          <div id="categoryChart" class="category-chart"></div>
+        </div>
+
+        <!-- Recent Expenses -->
+        <div class="section-box">
+          <h3 class="section-title">Recent Expenses</h3>
+          <table class="expense-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody id="recentExpenses"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── TAB: ADD EXPENSE ── -->
+      <section id="tab-add" class="tab-content">
+        <div class="form-card">
+          <h3>Add New Expense</h3>
+
+          <div class="form-group">
+            <label for="expDate">Date <span class="required">*</span></label>
+            <input type="date" id="expDate" />
+            <span class="error-msg" id="errDate"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="expDesc">Description <span class="required">*</span></label>
+            <input type="text" id="expDesc" placeholder="e.g. Lunch at canteen" maxlength="100"/>
+            <span class="error-msg" id="errDesc"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="expCategory">Category <span class="required">*</span></label>
+            <select id="expCategory">
+              <option value="">-- Select Category --</option>
+              <option value="Food">🍔 Food</option>
+              <option value="Transportation">🚌 Transportation</option>
+              <option value="School Supplies">📚 School Supplies</option>
+              <option value="Entertainment">🎮 Entertainment</option>
+              <option value="Health">💊 Health</option>
+              <option value="Others">📦 Others</option>
+            </select>
+            <span class="error-msg" id="errCategory"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="expAmount">Amount (₱) <span class="required">*</span></label>
+            <input type="number" id="expAmount" placeholder="e.g. 150.00" min="0.01" step="0.01"/>
+            <span class="error-msg" id="errAmount"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="expNotes">Notes (optional)</label>
+            <textarea id="expNotes" placeholder="Any additional notes..." rows="3"></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-primary" onclick="addExpense()">✅ Add Expense</button>
+            <button class="btn-secondary" onclick="clearForm()">🔄 Clear</button>
+          </div>
+
+          <div id="successMsg" class="success-msg hidden">✅ Expense added successfully!</div>
+        </div>
+      </section>
+
+      <!-- ── TAB: HISTORY ── -->
+      <section id="tab-history" class="tab-content">
+        <div class="section-box">
+          <div class="history-topbar">
+            <h3 class="section-title" style="margin:0">All Expenses</h3>
+            <div class="filter-row">
+              <select id="filterCategory" onchange="filterExpenses()">
+                <option value="">All Categories</option>
+                <option value="Food">Food</option>
+                <option value="Transportation">Transportation</option>
+                <option value="School Supplies">School Supplies</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Health">Health</option>
+                <option value="Others">Others</option>
+              </select>
+              <button class="btn-danger" onclick="clearAllExpenses()">🗑 Clear All</button>
+            </div>
+          </div>
+
+          <table class="expense-table" style="margin-top:1rem">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Amount</th>
+                <th>Notes</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="historyTable"></tbody>
+          </table>
+          <p id="noExpenses" class="empty-state">No expenses recorded yet.</p>
+        </div>
+      </section>
+
+      <!-- ── TAB: BUDGET ── -->
+      <section id="tab-budget" class="tab-content">
+        <div class="form-card">
+          <h3>🎯 Set Monthly Budget</h3>
+
+          <div class="form-group">
+            <label for="budgetInput">Monthly Budget (₱) <span class="required">*</span></label>
+            <input type="number" id="budgetInput" placeholder="e.g. 3000.00" min="1" step="0.01"/>
+            <span class="error-msg" id="errBudget"></span>
+          </div>
+
+          <button class="btn-primary" onclick="setBudget()">💾 Save Budget</button>
+          <div id="budgetSuccess" class="success-msg hidden">✅ Budget saved!</div>
+
+          <div class="budget-status-box" id="budgetStatusBox">
+            <div class="budget-status-label">Budget Status</div>
+            <div class="budget-bar-bg">
+              <div class="budget-bar-fill" id="budgetBarFill"></div>
+            </div>
+            <div class="budget-status-text" id="budgetStatusText"></div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
